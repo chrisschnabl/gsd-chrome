@@ -2,7 +2,7 @@
   <head>
     <style>
       body {
-        width: 300px;
+        width: 350px;
         padding: 20px;
         font-family: Arial, sans-serif;
       }
@@ -22,6 +22,12 @@
       }
       .button:hover {
         background-color: #45a049;
+      }
+      .button.secondary {
+        background-color: #2196F3;
+      }
+      .button.secondary:hover {
+        background-color: #1976D2;
       }
       .input-field {
         width: 100%;
@@ -48,12 +54,35 @@
         color: #721c24;
         border: 1px solid #f5c6cb;
       }
+      .section {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+      }
+      .section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+      .section h3 {
+        margin-top: 0;
+        color: #333;
+      }
     </style>
   </head>
   <body>
-    <h2>Lovable Prompt Helper</h2>
-    <textarea id="promptText" class="input-field" rows="4" placeholder="Enter text to append to Lovable prompt..."></textarea>
-    <button id="appendButton" class="button">Append to Lovable Prompt</button>
+    <h2>Lovable A/B Test Assistant</h2>
+    
+    <div class="section">
+      <h3>Read Code from Editor</h3>
+      <button id="readButton" class="button secondary">Read Code from File Editor</button>
+    </div>
+    
+    <div class="section">
+      <h3>Append to Lovable Prompt</h3>
+      <textarea id="promptText" class="input-field" rows="4" placeholder="Enter text to append to Lovable prompt..."></textarea>
+      <button id="appendButton" class="button">Append to Lovable Prompt</button>
+    </div>
+    
     <div id="status" class="status"></div>
     <script src="popup.js"></script>
   </body>

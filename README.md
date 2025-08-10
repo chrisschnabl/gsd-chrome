@@ -52,10 +52,9 @@ These permissions are necessary for the extension to analyze your code and provi
 ## Files
 
 - `manifest.json` - Extension configuration and permissions
-- `hello.html` - Popup interface with styling
+- `index.html` - Popup interface with styling
 - `popup.js` - Popup logic and script injection
 - `content.js` - Content script for page interaction (backup method)
-- `hello_extensions.png` - Extension icon
 
 ## Roadmap
 

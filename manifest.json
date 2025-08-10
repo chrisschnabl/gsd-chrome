@@ -1,6 +1,6 @@
 {
   "name": "Lovable A/B Test Assistant",
-  "description": "Extracts code from Lovable file editor to provide intelligent A/B testing recommendations for your prompts. Analyzes your implementation to suggest contextually relevant prompt variations.",
+  "description": "Reads code from Lovable file editor to provide intelligent A/B testing recommendations for your prompts.",
   "version": "0.1",
   "manifest_version": 3,
   "permissions": [
@@ -8,12 +8,12 @@
     "scripting"
   ],
   "action": {
-    "default_popup": "hello.html",
+    "default_popup": "index.html",
     "default_icon": "favicon.png"
   },
   "content_scripts": [
     {
-      "matches": ["*://*/*"],
+      "matches": ["*://*.lovable.dev/*", "*://lovable.dev/*"],
       "js": ["content.js"]
     }
   ]

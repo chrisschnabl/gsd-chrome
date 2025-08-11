@@ -2,10 +2,69 @@
   
 })();
 
-// Content script for interacting with Lovable prompt textarea
-// This script will be injected into web pages
-
 console.log('=== Lovable Prompt Helper content script loaded ===');
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    try {
+      const uri = window.location.href;
+      
+      const links = Array.from(document.querySelectorAll('a'));
+      const lovableAppLink = links.find(a => a.hostname.endsWith('.lovable.app'));
+      
+      let projectUrl = "Not found";
+      if (lovableAppLink) {
+          projectUrl = lovableAppLink.href;
+      }
+
+      const uuidRegex = /\/projects\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+      const match = uri.match(uuidRegex);
+
+      if (!match || !match[1]) {
+          // If no UUID in URL, maybe we are on the lovable.app page itself.
+          if (projectUrl === "Not found" && window.location.hostname.endsWith('.lovable.app')) {
+              projectUrl = window.location.origin + '/';
+          } else if (projectUrl === "Not found") {
+              alert('GSD-HELPER: Could not find a valid project UUID in the URL or a .lovable.app link.');
+              return;
+          }
+      }
+
+      const projectId = match && match[1] ? match[1] : 'not-found-on-this-page';
+
+      fetch('https://us-central1-convertable-eu.cloudfunctions.net/initialize_project', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+              project_id: projectId,
+              project_url: projectUrl
+          })
+      })
+      .then(response => {
+          if (!response.ok) {
+              return response.text().then(text => {
+                  throw new Error(`HTTP error! Status: ${response.status}, Body: ${text}`);
+              });
+          }
+          return response.json();
+      })
+      .then(data => {
+          console.log('GSD-HELPER: Project initialization successful.', data);
+          alert('GSD-HELPER: Project initialization successful: ' + JSON.stringify(data));
+      })
+      .catch(error => {
+          console.error('GSD-HELPER: Project initialization failed.', error);
+          alert('GSD-HELPER: Project initialization failed: ' + error.message);
+      });
+
+    } catch(e) {
+      alert('GSD-HELPER error evaluating XPath: ' + e.message);
+    }
+  }, 2000); // Wait 2 seconds
+});
+
 console.log('Current URL:', window.location.href);
 console.log('Document ready state:', document.readyState);
 

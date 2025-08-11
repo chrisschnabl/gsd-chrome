@@ -1,3 +1,38 @@
+(function () {
+  function isAnalyticsHere() {
+    try {
+      const u = new URL(location.href);
+      const pathOk = /^\/projects\/[0-9a-f-]{36}$/i.test(u.pathname);
+      return u.hostname === "lovable.dev" && pathOk && u.search === "?settings=analytics";
+    } catch { return false; }
+  }
+
+  let last = location.href;
+  function maybeNotify(source) {
+    if (location.href !== last) {
+      last = location.href;
+      if (isAnalyticsHere()) {
+        chrome.runtime.sendMessage({ type: "ANALYTICS_SETTINGS_VIEW", url: location.href, source });
+      }
+    } else if (source === "init" && isAnalyticsHere()) {
+      // fire once on load if already on the target URL
+      chrome.runtime.sendMessage({ type: "ANALYTICS_SETTINGS_VIEW", url: location.href, source });
+    }
+  }
+
+  window.addEventListener("hashchange", () => maybeNotify("hashchange"));
+  window.addEventListener("popstate", () => maybeNotify("popstate"));
+
+  // Catch pushState/replaceState-driven SPAs
+  const _ps = history.pushState;
+  history.pushState = function () { _ps.apply(this, arguments); maybeNotify("pushState"); };
+  const _rs = history.replaceState;
+  history.replaceState = function () { _rs.apply(this, arguments); maybeNotify("replaceState"); };
+
+  // Initial check
+  maybeNotify("init");
+})();
+
 // Content script for interacting with Lovable prompt textarea
 // This script will be injected into web pages
 
@@ -186,14 +221,87 @@ window.lovableHelper = {
     } catch (error) {
       return { success: false, message: 'Error: ' + error.message };
     }
+  },
+
+  insertFunnyAnalytics: function() {
+    try {
+      console.log('=== Inserting funny analytics div ===');
+      
+      // Find the target element using XPath
+      const xpath1 = "/html/body/div[3]/div/div[2]/div[4]/div[1]";
+      
+      const result1 = document.evaluate(xpath1, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+      
+      const element1 = result1.singleNodeValue;
+        
+      console.log('Element 1 found:', element1);
+    
+      
+      if (!element1) {
+        return { success: false, message: 'Could not find target element' };
+      }
+      
+      // Create the funny analytics div
+      const funnyAnalyticsDiv = document.createElement('div');
+      funnyAnalyticsDiv.className = 'funny-analytics-container';
+      funnyAnalyticsDiv.style.cssText = 'margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);';
+      
+      // Funny headings for the analytics
+      const funnyHeadings = [
+        'Caffeine Intake',
+        'Cat Videos Watched',
+        'Procrastination Level',
+        'Snack Breaks',
+        'Existential Crises'
+      ];
+      
+      const funnyValues = [
+        '∞ cups',
+        '42 videos',
+        'Maximum',
+        'Every 5 min',
+        '3 today'
+      ];
+      
+      // Create the grid content
+      const gridContent = `
+        <div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
+          ${funnyHeadings.map((heading, index) => `
+            <div class="group flex cursor-pointer flex-col gap-2 rounded-xl border bg-white/10 backdrop-blur-sm p-4 border-white/20 hover:bg-white/20 transition-all duration-300" data-state="closed">
+              <p class="text-sm font-medium group-hover:text-yellow-300 text-white">${heading}</p>
+              <div class="flex items-center justify-between gap-2">
+                <p class="h-5 font-medium text-white">${funnyValues[index]}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+      // Add a funny title
+      const titleDiv = document.createElement('h3');
+      titleDiv.textContent = '🤪 Your Totally Scientific Analytics Dashboard';
+      titleDiv.style.cssText = 'color: white; font-size: 1.5rem; font-weight: bold; margin-bottom: 16px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);';
+      
+      funnyAnalyticsDiv.appendChild(titleDiv);
+      funnyAnalyticsDiv.innerHTML += gridContent;
+      
+      // Insert the new div after the first element
+      element1.parentNode.insertBefore(funnyAnalyticsDiv, element1.nextSibling);
+      
+      console.log('Funny analytics div inserted successfully');
+      
+      return { success: true, message: 'Funny analytics div inserted successfully' };
+    } catch (error) {
+      console.error('Error inserting funny analytics:', error);
+      return { success: false, message: 'Error: ' + error.message };
+    }
   }
 };
 
-// Listen for messages from the popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Received message:', request);
-  
-  if (request.action === 'appendText') {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.type === "ANALYTICS_SETTINGS_VIEW") {
+    alert("Analytics settings viewed at " + request.url);
+  } else if (request.action === 'appendText') {
     const result = window.lovableHelper.appendText(request.text);
     console.log('Append result:', result);
     sendResponse(result);
@@ -201,7 +309,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const result = window.lovableHelper.readCode();
     console.log('Read result:', result);
     sendResponse(result);
+  } else if (request.action === 'insertFunnyAnalytics') {
+    const result = window.lovableHelper.insertFunnyAnalytics();
+    console.log('Insert funny analytics result:', result);
+    sendResponse(result);
   }
+  return true; // Keep the message channel open for sendResponse
 });
 
 console.log('Content script setup complete. Global helper available at window.lovableHelper');

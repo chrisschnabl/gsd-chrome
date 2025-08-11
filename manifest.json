@@ -3,18 +3,18 @@
   "description": "Reads code from Lovable file editor to provide intelligent A/B testing recommendations for your prompts.",
   "version": "0.1",
   "manifest_version": 3,
-  "permissions": [
-    "activeTab",
-    "scripting"
-  ],
+  "permissions": ["tabs", "webNavigation", "scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
   "action": {
     "default_popup": "index.html",
     "default_icon": "favicon.png"
   },
   "content_scripts": [
     {
-      "matches": ["*://*.lovable.dev/*", "*://lovable.dev/*"],
-      "js": ["content.js"]
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
     }
   ]
 }

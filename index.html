@@ -2,7 +2,8 @@
   <head>
     <style>
       body {
-        width: 350px;
+        width: 600px;
+        min-height: 560px;
         padding: 20px;
         font-family: Arial, sans-serif;
       }
@@ -28,6 +29,27 @@
       }
       .button.secondary:hover {
         background-color: #1976D2;
+      }
+      .button.experiment {
+        background-color: #9C27B0;
+      }
+      .button.experiment:hover {
+        background-color: #7B1FA2;
+      }
+      .button.select {
+        background-color: #FF9800;
+        font-size: 14px;
+        padding: 8px 16px;
+        margin: 4px 0;
+      }
+      .button.select:hover {
+        background-color: #F57C00;
+      }
+      .button.inject {
+        background-color: #FF5722;
+      }
+      .button.inject:hover {
+        background-color: #E64A19;
       }
       .input-field {
         width: 100%;
@@ -67,20 +89,118 @@
         margin-top: 0;
         color: #333;
       }
+      .result-box {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 10px;
+        margin-top: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        display: none;
+      }
+      .ideas-container {
+        margin-top: 15px;
+        display: none;
+      }
+      .idea-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+      }
+      .idea-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+      .idea-title {
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 8px;
+        color: #fff;
+      }
+      .idea-description {
+        font-size: 14px;
+        line-height: 1.4;
+        margin-bottom: 12px;
+        color: #f0f0f0;
+      }
+      .idea-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .selected-idea {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        border: 2px solid #fff;
+      }
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+      }
+      .loading::after {
+        content: '';
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     </style>
   </head>
   <body>
     <h2>Lovable A/B Test Assistant</h2>
     
+
     <div class="section">
       <h3>Read Code from Editor</h3>
       <button id="readButton" class="button secondary">Read Code from File Editor</button>
     </div>
     
     <div class="section">
+      <h3>Create Experiment</h3>
+      <input type="text" id="projectName" class="input-field" placeholder="Enter project name..." />
+      <button id="createExperimentButton" class="button experiment">Create Experiment</button>
+      <div id="experimentResult" class="result-box"></div>
+      
+      <div id="ideasContainer" class="ideas-container">
+        <h4>🎯 A/B Testing Ideas</h4>
+        <div id="ideasList"></div>
+      </div>
+    </div>
+    
+    <div class="section">
       <h3>Append to Lovable Prompt</h3>
       <textarea id="promptText" class="input-field" rows="4" placeholder="Enter text to append to Lovable prompt..."></textarea>
       <button id="appendButton" class="button">Append to Lovable Prompt</button>
+    </div>
+    
+
+    
+    <div class="section">
+      <h3>Settings Page Detection</h3>
+      <button id="checkSettingsButton" class="button" style="background-color: #FF9800;">🔍 Check Settings Page</button>
+    </div>
+    
+    <div class="section">
+      <h3>Analytics Click Listener</h3>
+      <button id="setupAnalyticsButton" class="button" style="background-color: #4CAF50;">🎯 Setup Analytics Click Listener</button>
+    </div>
+    
+    <div class="section">
+      <h3>Funny Analytics</h3>
+      <button id="insertFunnyAnalyticsButton" class="button" style="background-color: #FF6B6B;">🤪 Insert Funny Analytics</button>
     </div>
     
     <div id="status" class="status"></div>

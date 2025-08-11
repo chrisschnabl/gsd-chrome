@@ -32,6 +32,14 @@ chrome.webNavigation.onCommitted.addListener(({ tabId, url, frameId }) => {
   if (frameId === 0) handle(tabId, url, "committed");
 });
 
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('GSD-HELPER: Message received in background script.', request);
+  if (request.type === "OPEN_POPUP") {
+    console.log('GSD-HELPER: OPEN_POPUP message received, attempting to open popup.');
+    chrome.action.openPopup();
+  }
+});
+
 // Tabs API fallback
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.url) handle(tabId, changeInfo.url, "tabs.onUpdated");

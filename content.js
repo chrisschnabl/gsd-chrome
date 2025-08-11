@@ -1,36 +1,5 @@
 (function () {
-  function isAnalyticsHere() {
-    try {
-      const u = new URL(location.href);
-      const pathOk = /^\/projects\/[0-9a-f-]{36}$/i.test(u.pathname);
-      return u.hostname === "lovable.dev" && pathOk && u.search === "?settings=analytics";
-    } catch { return false; }
-  }
-
-  let last = location.href;
-  function maybeNotify(source) {
-    if (location.href !== last) {
-      last = location.href;
-      if (isAnalyticsHere()) {
-        chrome.runtime.sendMessage({ type: "ANALYTICS_SETTINGS_VIEW", url: location.href, source });
-      }
-    } else if (source === "init" && isAnalyticsHere()) {
-      // fire once on load if already on the target URL
-      chrome.runtime.sendMessage({ type: "ANALYTICS_SETTINGS_VIEW", url: location.href, source });
-    }
-  }
-
-  window.addEventListener("hashchange", () => maybeNotify("hashchange"));
-  window.addEventListener("popstate", () => maybeNotify("popstate"));
-
-  // Catch pushState/replaceState-driven SPAs
-  const _ps = history.pushState;
-  history.pushState = function () { _ps.apply(this, arguments); maybeNotify("pushState"); };
-  const _rs = history.replaceState;
-  history.replaceState = function () { _rs.apply(this, arguments); maybeNotify("replaceState"); };
-
-  // Initial check
-  maybeNotify("init");
+  
 })();
 
 // Content script for interacting with Lovable prompt textarea
@@ -300,7 +269,7 @@ window.lovableHelper = {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.type === "ANALYTICS_SETTINGS_VIEW") {
-    alert("Analytics settings viewed at " + request.url);
+    window.lovableHelper.insertFunnyAnalytics();
   } else if (request.action === 'appendText') {
     const result = window.lovableHelper.appendText(request.text);
     console.log('Append result:', result);
@@ -318,3 +287,124 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 console.log('Content script setup complete. Global helper available at window.lovableHelper');
+
+(function() {
+    // This selector is designed to find elements with dynamically generated class names
+    // from Radix UI, like "radix-123-content-analytics".
+    const targetSelector = '[class*="-content-analytics"]';
+    const headerClassName = 'hello-chris-header';
+
+    function findAndInsert() {
+        const potentialTargets = document.querySelectorAll(targetSelector);
+
+        potentialTargets.forEach(target => {
+            // Confirm it's the right kind of element by checking for the 'radix-' prefix.
+            const isMatchingElement = Array.from(target.classList).some(
+                cls => cls.startsWith('radix-') && cls.endsWith('-content-analytics')
+            );
+
+            if (isMatchingElement) {
+                // Check if the header has already been added for this specific element.
+                const nextEl = target.nextElementSibling;
+                if (!nextEl || !nextEl.classList.contains(headerClassName)) {
+                    console.log('GSD-HELPER: Found analytics element:', target);
+                    const header = document.createElement('h1');
+                    header.textContent = 'Hello Chris';
+                    header.className = headerClassName;
+                    target.parentNode.insertBefore(header, target.nextSibling);
+                    console.log('GSD-HELPER: Inserted H1 tag below the target element.');
+                }
+            }
+        });
+    }
+
+    // Set up a MutationObserver to watch for future changes to the DOM
+    const observer = new MutationObserver(findAndInsert);
+    
+    function startObserver() {
+        if (document.body) {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            console.log('GSD-HELPER: Monitoring for analytics elements to appear.');
+        } else {
+            // If body doesn't exist yet, wait for it.
+            window.addEventListener('DOMContentLoaded', startObserver, { once: true });
+        }
+    }
+    
+    // Run the check once on script load and start observing
+    findAndInsert();
+    startObserver();
+})();
+
+(function() {
+    const codeViewerSelector = 'button[aria-label="Code viewer"]';
+    // This selector is a guess, but it targets a button with an aria-label containing "A/B"
+    const abButtonSelector = 'button[aria-label*="A/B"]'; 
+    const gsdButtonId = 'gsd-ab-button';
+
+    function modifyPageButtons() {
+        // 1. Find or create the A/B button
+        let abButton = document.getElementById(gsdButtonId);
+        if (!abButton) {
+            const codeViewerButton = document.querySelector(codeViewerSelector);
+            if (codeViewerButton && codeViewerButton.parentNode) {
+                console.log('GSD-HELPER: Creating the A/B button.');
+                abButton = document.createElement('button');
+                abButton.id = gsdButtonId;
+                abButton.setAttribute('aria-label', 'A/B Test Helper');
+                abButton.innerHTML = `<img src="${chrome.runtime.getURL('button.svg')}" alt="A/B">`;
+                abButton.className = codeViewerButton.className; // Copy styling from a similar button
+                abButton.style.marginRight = '8px';
+                abButton.style.backgroundColor = '#764ba2'; // A pinkish color from the analytics dashboard gradient
+
+                codeViewerButton.parentNode.insertBefore(abButton, codeViewerButton);
+
+                abButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    console.log('GSD-HELPER: A/B button clicked, sending message to open popup.');
+                    chrome.runtime.sendMessage({ type: "OPEN_POPUP" });
+                }, true);
+            }
+        }
+        
+        // The original code viewer button hijacking is no longer needed
+        // if the A/B button is what should open the popup.
+        // I'll leave it here but commented out in case it's desired.
+        /*
+        // 2. Find and hijack the Code Viewer button
+        const codeViewerButton = document.querySelector(codeViewerSelector);
+        if (codeViewerButton && !codeViewerButton.dataset.gsdHandled) {
+            console.log('GSD-HELPER: Found code viewer button to hijack', codeViewerButton);
+            // Prevent its original action and open our popup instead
+            codeViewerButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                chrome.runtime.sendMessage({ type: "OPEN_POPUP" });
+            }, true); // Use capture: true to ensure this listener runs first
+            codeViewerButton.dataset.gsdHandled = true;
+        }
+        */
+    }
+
+    const observer = new MutationObserver(modifyPageButtons);
+    
+    function startObserver() {
+        if (document.body) {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            console.log('GSD-HELPER: Monitoring for A/B and Code Viewer buttons.');
+        } else {
+            // If body doesn't exist yet, wait for it.
+            window.addEventListener('DOMContentLoaded', startObserver, { once: true });
+        }
+    }
+
+    modifyPageButtons();
+    startObserver();
+})();

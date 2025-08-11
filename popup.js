@@ -111,10 +111,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const response = results[0].result;
         console.log('Check settings result:', response);
         
-        if (response.isSettingsPage) {
-          showStatus('Settings page detected! Alert triggered! 🎉');
+        if (response.success) {
+          showStatus('Funny analytics inserted successfully! 🎉');
         } else {
-          showStatus('Not on settings page. Current URL: ' + response.currentUrl);
+          showStatus(response.message || 'Not on analytics settings page.');
         }
       } else {
         throw new Error('Script execution failed');
@@ -573,31 +573,22 @@ function checkSettingsPageDirectly() {
     const currentUrl = window.location.href;
     console.log('Current URL:', currentUrl);
     
-    if (currentUrl.includes('settings')) {
-      console.log('🚨 Settings page detected! Triggering alert...');
+    if (currentUrl.includes('settings=analytics')) {
+      console.log('🚨 Analytics settings page detected! Inserting funny analytics...');
       
-      // Trigger the alert
-      alert('🎉 Settings page detected! You\'ve navigated to a settings page.');
-      console.log('Settings alert triggered for URL:', currentUrl);
-      
-      return { 
-        isSettingsPage: true, 
-        currentUrl: currentUrl,
-        message: 'Settings page detected and alert triggered!'
-      };
+      // Instead of alerting, call the function to insert the analytics div
+      return insertFunnyAnalyticsDirectly();
     } else {
-      console.log('❌ Not on settings page');
+      console.log('❌ Not on analytics settings page');
       return { 
-        isSettingsPage: false, 
-        currentUrl: currentUrl,
-        message: 'Not on settings page'
+        success: false, 
+        message: 'Not on analytics settings page'
       };
     }
   } catch (error) {
     console.error('Error checking settings page:', error);
     return { 
-      isSettingsPage: false, 
-      currentUrl: window.location.href,
+      success: false, 
       error: error.message 
     };
   }

@@ -2,18 +2,19 @@
   <head>
     <style>
       body {
-        width: 400px; /* Adjusted for a more compact look */
-        min-height: auto;
-        padding: 24px;
+        width: 750px;
+        height: 600px;
+        padding: 16px;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         background-color: #1e1e1e; /* Dark background */
         color: #d4d4d4; /* Light text */
+        overflow-y: auto;
       }
       h2 {
         text-align: center;
         color: #ffffff;
         margin-top: 0;
-        margin-bottom: 24px;
+        margin-bottom: 16px;
         font-weight: 600;
       }
       .button {
@@ -36,7 +37,7 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       }
-      .input-field, textarea {
+      .input-field, textarea, select {
         width: 100%;
         padding: 12px;
         margin: 8px 0;
@@ -47,6 +48,13 @@
         background-color: #2a2a2a; /* Dark input background */
         color: #d4d4d4; /* Light text */
         font-size: 14px;
+        transition: border-color 0.2s ease;
+      }
+      
+      .input-field:focus, textarea:focus, select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
       }
       textarea {
         resize: vertical;
@@ -70,8 +78,8 @@
         border: 1px solid #8b3e3e;
       }
       .section {
-        margin-bottom: 24px;
-        padding-bottom: 24px;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
         border-bottom: 1px solid #333;
       }
       .section:last-child {
@@ -81,20 +89,259 @@
       }
       .section h3 {
         margin-top: 0;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
         color: #e0e0e0;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 500;
+      }
+      .experiment-card {
+        background-color: #2a2a2a;
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 8px 0;
+        display: none;
+      }
+      .experiment-card.show {
+        display: block;
+      }
+      .experiment-title {
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 8px;
+        font-size: 16px;
+      }
+      .experiment-description {
+        color: #b0b0b0;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .experiment-id {
+        color: #888;
+        font-size: 12px;
+        margin-top: 8px;
+        font-family: monospace;
+      }
+      .dropdown-container {
+        margin-bottom: 12px;
+      }
+      .dropdown-label {
+        display: block;
+        margin-bottom: 6px;
+        color: #e0e0e0;
+        font-weight: 500;
+      }
+      
+      .results-table-container {
+        overflow-x: auto;
+        margin-top: 16px;
+      }
+      
+      .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #2a2a2a;
+        border-radius: 8px;
+        overflow: hidden;
+        font-size: 14px;
+      }
+      
+      .results-table th {
+        background-color: #333;
+        color: #ffffff;
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 1px solid #444;
+      }
+      
+      .results-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #444;
+        color: #d4d4d4;
+      }
+      
+      .results-table tr:last-child td {
+        border-bottom: none;
+      }
+      
+      .results-table tr:hover {
+        background-color: #333;
+      }
+      
+      .positive {
+        color: #4ade80;
+        font-weight: 600;
+      }
+      
+      .negative {
+        color: #f87171;
+        font-weight: 600;
+      }
+      
+      .status-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+      }
+      
+      .status-badge.running {
+        background-color: #1e3a2a;
+        color: #4ade80;
+        border: 1px solid #22c55e;
+      }
+      
+      .status-badge.paused {
+        background-color: #3a1e1e;
+        color: #f87171;
+        border: 1px solid #ef4444;
+      }
+      
+      .experiments-table-container {
+        overflow-x: auto;
+        margin-top: 8px;
+      }
+      
+      .experiments-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #2a2a2a;
+        border-radius: 8px;
+        overflow: hidden;
+        font-size: 14px;
+      }
+      
+      .experiments-table th {
+        background-color: #333;
+        color: #ffffff;
+        padding: 10px 12px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 1px solid #444;
+      }
+      
+      .experiments-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #444;
+        color: #d4d4d4;
+        vertical-align: top;
+      }
+      
+      .experiments-table tr:last-child td {
+        border-bottom: none;
+      }
+      
+      .experiments-table tr:hover {
+        background-color: #333;
+      }
+      
+      .experiment-title {
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 4px;
+        font-size: 14px;
+      }
+      
+      .experiment-description {
+        color: #b0b0b0;
+        font-size: 12px;
+        line-height: 1.3;
+      }
+      
+      .experiment-id {
+        color: #888;
+        font-size: 11px;
+        margin-top: 4px;
+        font-family: monospace;
+      }
+      
+      .action-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 6px 12px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      
+      .action-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       }
     </style>
   </head>
   <body>
-    <h2>A/B Test Assistant</h2>
+    <div class="section">
+      <h3>Suggested Experiments</h3>
+      <div class="experiments-table-container">
+        <table class="experiments-table">
+          <thead>
+            <tr>
+              <th>Experiment</th>
+              <th>Description</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="experimentsTableBody">
+            <!-- Experiments will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
 
     <div class="section">
-      <h3>Append to Lovable Prompt</h3>
-      <textarea id="promptText" class="input-field" rows="5" placeholder="Enter text to append..."></textarea>
-      <button id="appendButton" class="button">Append to Prompt</button>
+      <h3>Experiment Results</h3>
+      <div class="results-table-container">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Experiment</th>
+              <th>Control CTR</th>
+              <th>Variant CTR</th>
+              <th>Lift</th>
+              <th>Users</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sharpen hero headline</td>
+              <td>2.4%</td>
+              <td>3.1%</td>
+              <td class="positive">+29.2%</td>
+              <td>1,247</td>
+              <td><span class="status-badge running">Running</span></td>
+            </tr>
+            <tr>
+              <td>Clarify primary CTA</td>
+              <td>1.8%</td>
+              <td>2.2%</td>
+              <td class="positive">+22.2%</td>
+              <td>892</td>
+              <td><span class="status-badge running">Running</span></td>
+            </tr>
+            <tr>
+              <td>Add hero trust logo bar</td>
+              <td>2.1%</td>
+              <td>1.9%</td>
+              <td class="negative">-9.5%</td>
+              <td>1,156</td>
+              <td><span class="status-badge paused">Paused</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div id="status" class="status"></div>

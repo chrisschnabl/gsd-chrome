@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
-  const appendButton = document.getElementById('appendButton');
-  const promptText = document.getElementById('promptText');
+  const experimentsTableBody = document.getElementById('experimentsTableBody');
   const status = document.getElementById('status');
+
+  let experiments = [];
 
   function showStatus(message, isError = false) {
     status.textContent = message;
@@ -13,16 +14,75 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 5000);
   }
 
-  // Append text to Lovable prompt
-  appendButton.addEventListener('click', async function() {
-    const textToAppend = promptText.value.trim();
+  // Load experiments from mock.json
+  async function loadExperiments() {
+    try {
+      const response = await fetch(chrome.runtime.getURL('mock.json'));
+      if (!response.ok) {
+        throw new Error('Failed to load experiments');
+      }
+      
+      const data = await response.json();
+      experiments = data.experiments || [];
+      
+      // Populate table
+      populateExperimentsTable();
+    } catch (error) {
+      console.error('Error loading experiments:', error);
+      showStatus('Error loading experiments: ' + error.message, true);
+    }
+  }
+
+  // Populate the experiments table
+  function populateExperimentsTable() {
+    // Clear existing rows
+    experimentsTableBody.innerHTML = '';
     
-    if (!textToAppend) {
-      showStatus('Please enter some text to append', true);
+    // Add experiment rows
+    experiments.forEach((experiment, index) => {
+      const row = document.createElement('tr');
+      
+      // Experiment column
+      const titleCell = document.createElement('td');
+      titleCell.innerHTML = `
+        <div class="experiment-title">${experiment.title}</div>
+        <div class="experiment-id">ID: ${experiment.id}</div>
+      `;
+      
+      // Description column
+      const descCell = document.createElement('td');
+      descCell.innerHTML = `<div class="experiment-description">${experiment.description}</div>`;
+      
+      // Action column
+      const actionCell = document.createElement('td');
+      const triggerButton = document.createElement('button');
+      triggerButton.className = 'action-button';
+      triggerButton.textContent = 'Trigger';
+      triggerButton.onclick = () => triggerExperimentFromTable(index);
+      actionCell.appendChild(triggerButton);
+      
+      row.appendChild(titleCell);
+      row.appendChild(descCell);
+      row.appendChild(actionCell);
+      
+      experimentsTableBody.appendChild(row);
+    });
+  }
+
+
+
+  // Handle trigger button click from table
+  async function triggerExperimentFromTable(experimentIndex) {
+    if (experimentIndex < 0 || experimentIndex >= experiments.length) {
+      showStatus('Invalid experiment index', true);
       return;
     }
 
+    const experiment = experiments[experimentIndex];
+    
     try {
+      showStatus('Triggering experiment...');
+      
       // Get the active tab
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       
@@ -31,24 +91,21 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      showStatus('Appending text to Lovable prompt...');
-
-      // Use direct script injection instead of content script messaging
+      // Execute script to trigger the experiment
       const results = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        function: appendTextDirectly,
-        args: [textToAppend]
+        function: triggerExperiment,
+        args: [experiment]
       });
       
       if (results && results[0] && results[0].result) {
         const response = results[0].result;
-        console.log('Append result:', response);
+        console.log('Trigger result:', response);
         
         if (response.success) {
-          showStatus(response.message || 'Text appended successfully!');
-          promptText.value = ''; // Clear the input
+          showStatus(`Experiment "${experiment.title}" triggered successfully!`);
         } else {
-          showStatus(response.message || 'Failed to append text', true);
+          showStatus(response.message || 'Failed to trigger experiment', true);
         }
       } else {
         throw new Error('Script execution failed');
@@ -58,69 +115,53 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('Error:', error);
       showStatus('Error: ' + error.message, true);
     }
-  });
+  }
+
+  // Load experiments when popup opens
+  loadExperiments();
 });
 
-
-// Function that will be executed directly in the page context for appending text
-function appendTextDirectly(textToAppend) {
-  console.log('=== Direct text appending ===');
-  console.log('Text to append:', textToAppend);
+// Function that will be executed directly in the page context for triggering experiments
+function triggerExperiment(experiment) {
+  console.log('=== Triggering experiment ===');
+  console.log('Experiment:', experiment);
   
   try {
-    // Try to find the textarea using the XPath
-    const xpath = "/html/body/div/div/div[2]/div[1]/div/form/div/div/textarea";
-    console.log('Using XPath for textarea:', xpath);
+    // For now, we'll just log the experiment details
+    // In a real implementation, this would trigger the actual experiment logic
+    console.log('Triggering experiment:', experiment.title);
+    console.log('Experiment ID:', experiment.id);
+    console.log('Description:', experiment.description);
     
-    const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-    const textarea = result.singleNodeValue;
+    // You can add specific experiment logic here based on the experiment ID or title
+    // For example:
+    // - Modify DOM elements
+    // - Send analytics events
+    // - Apply CSS changes
+    // - etc.
     
-    console.log('Textarea found:', textarea);
-    
-    if (textarea) {
-      const currentValue = textarea.value;
-      console.log('Current textarea value:', currentValue);
-      
-      textarea.value = currentValue + (currentValue ? '\n' : '') + textToAppend;
-      console.log('New textarea value:', textarea.value);
-      
-      // Trigger input event to notify the page that the value has changed
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
-      
-      // Focus the textarea
-      textarea.focus();
-      
-      return { success: true, message: 'Text appended successfully' };
-    } else {
-      console.log('Could not find textarea with XPath, trying fallback...');
-      
-      // Fallback: try to find any textarea that might be the Lovable prompt
-      const textareas = document.querySelectorAll('textarea');
-      console.log(`Found ${textareas.length} textareas on page`);
-      
-      for (const ta of textareas) {
-        console.log('Checking textarea:', ta);
-        console.log('Placeholder:', ta.placeholder);
-        
-        if (ta.placeholder && (ta.placeholder.toLowerCase().includes('ask') || 
-            ta.placeholder.toLowerCase().includes('prompt') ||
-            ta.placeholder.toLowerCase().includes('lovable'))) {
-          
-          const currentValue = ta.value;
-          console.log('Found likely Lovable textarea, current value:', currentValue);
-          
-          ta.value = currentValue + (currentValue ? '\n' : '') + textToAppend;
-          ta.dispatchEvent(new Event('input', { bubbles: true }));
-          ta.focus();
-          
-          return { success: true, message: 'Text appended to likely Lovable textarea' };
-        }
-      }
-      
-      return { success: false, message: 'Could not find Lovable textarea' };
+    // Example: Find and modify elements based on experiment
+    if (experiment.title.includes('headline')) {
+      const headlines = document.querySelectorAll('h1, h2');
+      console.log('Found headlines:', headlines.length);
+      // Add your headline modification logic here
     }
+    
+    if (experiment.title.includes('CTA')) {
+      const buttons = document.querySelectorAll('button, a[href*="#"], .cta, .btn');
+      console.log('Found CTAs:', buttons.length);
+      // Add your CTA modification logic here
+    }
+    
+    return { 
+      success: true, 
+      message: `Experiment "${experiment.title}" triggered successfully` 
+    };
   } catch (error) {
-    console.error('Error appending text:', error);
-    return { success: false, message: 'Error: ' + error.message };
+    console.error('Error triggering experiment:', error);
+    return { 
+      success: false, 
+      message: 'Error: ' + error.message 
+    };
   }
 }

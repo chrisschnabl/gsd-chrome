@@ -19,7 +19,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["button.svg"],
+      "resources": ["button.svg", "mock.json"],
       "matches": ["<all_urls>"]
     }
   ]

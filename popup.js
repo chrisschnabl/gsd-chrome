@@ -117,7 +117,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Load experiments when popup opens
   loadExperiments();
 });
 
@@ -125,43 +124,4 @@ document.addEventListener('DOMContentLoaded', function() {
 function triggerExperiment(experiment) {
   console.log('=== Triggering experiment ===');
   console.log('Experiment:', experiment);
-  
-  try {
-    // For now, we'll just log the experiment details
-    // In a real implementation, this would trigger the actual experiment logic
-    console.log('Triggering experiment:', experiment.title);
-    console.log('Experiment ID:', experiment.id);
-    console.log('Description:', experiment.description);
-    
-    // You can add specific experiment logic here based on the experiment ID or title
-    // For example:
-    // - Modify DOM elements
-    // - Send analytics events
-    // - Apply CSS changes
-    // - etc.
-    
-    // Example: Find and modify elements based on experiment
-    if (experiment.title.includes('headline')) {
-      const headlines = document.querySelectorAll('h1, h2');
-      console.log('Found headlines:', headlines.length);
-      // Add your headline modification logic here
-    }
-    
-    if (experiment.title.includes('CTA')) {
-      const buttons = document.querySelectorAll('button, a[href*="#"], .cta, .btn');
-      console.log('Found CTAs:', buttons.length);
-      // Add your CTA modification logic here
-    }
-    
-    return { 
-      success: true, 
-      message: `Experiment "${experiment.title}" triggered successfully` 
-    };
-  } catch (error) {
-    console.error('Error triggering experiment:', error);
-    return { 
-      success: false, 
-      message: 'Error: ' + error.message 
-    };
-  }
 }
